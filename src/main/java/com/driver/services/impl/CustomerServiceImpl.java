@@ -84,6 +84,13 @@ public class CustomerServiceImpl implements CustomerService {
 		if(!optionalTripBooking.isPresent()) return ;
 		TripBooking curTrip=optionalTripBooking.get();
 		curTrip.setStatus(TripStatus.CANCELED);
+		curTrip.setBill(0);
+
+		Driver driver=curTrip.getDriver();
+		driver.getCab().setAvailable(true);
+
+		driverRepository2.save(driver);
+		tripBookingRepository2.save(curTrip);
 	}
 
 	@Override
@@ -92,8 +99,13 @@ public class CustomerServiceImpl implements CustomerService {
 		Optional<TripBooking> optionalTripBooking=tripBookingRepository2.findById(tripId);
 		if(!optionalTripBooking.isPresent()) return ;
 
-		TripBooking curTrip=optionalTripBooking.get();
-		curTrip.setStatus(TripStatus.COMPLETED);
+		TripBooking tripBooking=optionalTripBooking.get();
+		tripBooking.setStatus(TripStatus.COMPLETED);
+		Driver driver=tripBooking.getDriver();
+		driver.getCab().setAvailable(true);
+
+		driverRepository2.save(driver);
+		tripBookingRepository2.save(tripBooking);
 
 	}
 }
