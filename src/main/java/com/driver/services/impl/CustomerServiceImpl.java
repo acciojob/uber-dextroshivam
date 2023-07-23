@@ -49,33 +49,31 @@ public class CustomerServiceImpl implements CustomerService {
 		Optional<Customer> optionalCustomer=customerRepository2.findById(customerId);
 		if(!optionalCustomer.isPresent()) return null;
 
-		Customer curCustomer=optionalCustomer.get();
+		Customer customer=optionalCustomer.get();
 
-		Cab cab=null;
-		Driver curDriver=null;
-		for(Driver driver:driverRepository2.findAll()){
-			if(driver.getCab().getAvailable()){
-				cab=driver.getCab();
-				curDriver=driver;
-				break;
+		TripBooking tripBooking = new TripBooking();
+		List<Driver> driverList=driverRepository2.findAll();
+		driverList.sort((a,b)->(a.getDriverId()-b.getDriverId()));
+		for (Driver driver:driverList) {
+			if (driver.getCab().getAvailable()){
+				driver.getCab().setAvailable(false);
+				tripBooking.setFromLocation(fromLocation);
+				tripBooking.setToLocation(toLocation);
+				tripBooking.setDistanceInKm(distanceInKm);
+				tripBooking.setStatus(TripStatus.CONFIRMED);
+				tripBooking.setBill(distanceInKm*driver.getCab().getPerKmRate());
+
+				tripBooking.setDriver(driver);
+				tripBooking.setCustomer(customer);
+//				TripBooking savedTripBooking = tripBookingRepository2.save(tripBooking);
+				customer.getTripBookingList().add(tripBooking);
+				driver.getTripBookingList().add(tripBooking);
+				customerRepository2.save(customer);
+				driverRepository2.save(driver);
+				return tripBooking;
 			}
 		}
-		if(cab==null) throw new Exception("No cab available!");
-		TripBooking tripBooking= new TripBooking();
-		tripBooking.setFromLocation(fromLocation);
-		tripBooking.setToLocation(toLocation);
-		tripBooking.setDistanceInKm(distanceInKm);
-		tripBooking.setStatus(TripStatus.CONFIRMED);
-		int bill=cab.getPerKmRate()*distanceInKm;
-		tripBooking.setBill(bill);
-		tripBooking.setCustomer(curCustomer);
-		tripBooking.setDriver(curDriver);
-
-		curCustomer.getTripBookingList().add(tripBooking);
-		curDriver.getTripBookingList().add(tripBooking);
-
-		TripBooking savedTripBooking=tripBookingRepository2.save(tripBooking);
-		return savedTripBooking;
+		throw new RuntimeException("No cab available!");
 
 	}
 
